@@ -13,7 +13,8 @@ const ExternalJobs = () => {
   const fetchJobs = (lat, lon, zip, skills) => {
     setLoading(true);
     setError(null);
-    let url = 'http://localhost:3001/scrape?';
+    const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3001';
+    let url = `${apiUrl}/scrape?`;
     if (lat && lon) {
       url += `lat=${lat}&lon=${lon}`;
     } else if (zip) {

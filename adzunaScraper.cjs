@@ -1,7 +1,7 @@
 const express = require('express');
 const axios = require('axios');
 const app = express();
-const port = 3001;
+const port = process.env.PORT || 3001;
 
 // Your Adzuna credentials
 const APP_ID = '78e4d905';

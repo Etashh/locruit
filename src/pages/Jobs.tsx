@@ -101,8 +101,9 @@ const Jobs = () => {
         // Convert distance string to number for the API
         const distanceValue = parseInt(distance, 10) || 10;
         
-        // Use direct API URL to avoid proxy issues
-        let url = `http://localhost:3001/scrape?${locationQuery}&distance=${distanceValue}`;
+        // Use environment variable for API URL
+        const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3001';
+        let url = `${apiUrl}/scrape?${locationQuery}&distance=${distanceValue}`;
         
         if (searchQuery) {
           url += `&skills=${encodeURIComponent(searchQuery)}`;
