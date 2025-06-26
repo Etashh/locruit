@@ -353,6 +353,7 @@ const Dashboard = () => {
             </div>
 
             <div className="flex items-center space-x-4">
+              <span className="text-lg font-semibold text-gray-800">Hello, {user.firstName}</span>
               <ProfileDropdown
                 name={user.name}
                 email={user.email}
