@@ -104,7 +104,8 @@ const SignUp = () => {
               last_name: formData.lastName,
               education_level: formData.educationLevel,
               school: formData.school,
-              profile_photo: avatarUrl
+              profile_photo: avatarUrl,
+              location: "Location not set" // Default location
             }
           ]);
 
