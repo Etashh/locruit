@@ -2,26 +2,25 @@ import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react-swc";
 import path from "path";
 import { componentTagger } from "lovable-tagger";
-// hey
-// Adjusted for deployment to the root of the repository
+
 export default defineConfig(({ mode }) => ({
-  base: "/",
+  base: "/", // This is fine for root domain deployment like Vercel
   build: {
     rollupOptions: {
-      external: [], // Removed specific external files to allow proper resolution
+      external: [],
     },
   },
   server: {
     host: "::",
     port: 8080,
-    proxy: {
+    proxy: mode === "development" ? {
       '/scrape': {
         target: 'http://localhost:3001',
         changeOrigin: true,
         secure: false,
         ws: true,
       },
-    },
+    } : undefined, // disable proxy for production build
   },
   plugins: [
     react(),
