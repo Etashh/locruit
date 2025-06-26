@@ -10,6 +10,7 @@ import { useGoogleAuth } from "@/hooks/useGoogleAuth";
 import { supabase } from "@/lib/supabaseClient";
 import { useToast } from "@/hooks/use-toast";
 import logo from "@/assets/logo.png"; // Adjust the path as necessary
+import { generateInitialsAvatar } from "@/utils/profileUtils";
 
 const SignUp = () => {
   const navigate = useNavigate();
@@ -71,33 +72,50 @@ const SignUp = () => {
     }
 
     setIsLoading(true);
-    const { error } = await supabase.auth.signUp({
-      email: formData.email,
-      password: formData.password,
-      options: {
-        data: {
-          first_name: formData.firstName,
-          last_name: formData.lastName,
-          education_level: formData.educationLevel,
-          school: formData.school,
-        },
-      },
-    });
-
-    if (error) {
-      toast({
-        title: "Error signing up",
-        description: error.message,
-        variant: "destructive",
-      });
-      setIsLoading(false);
-      return;
-    }
-    toast({
-      title: "Account created successfully!",
-      description: "Please complete your profile to get started.",
-    });
+    
     try {
+      // Generate initial avatar
+      const avatarUrl = generateInitialsAvatar(formData.firstName, formData.lastName);
+
+      // Sign up the user
+      const { error: signUpError, data: { user } } = await supabase.auth.signUp({
+        email: formData.email,
+        password: formData.password,
+        options: {
+          data: {
+            first_name: formData.firstName,
+            last_name: formData.lastName,
+            education_level: formData.educationLevel,
+            school: formData.school,
+          },
+        },
+      });
+
+      if (signUpError) throw signUpError;
+
+      if (user) {
+        // Create user profile in users table with avatar
+        const { error: profileError } = await supabase
+          .from('users')
+          .insert([
+            {
+              email: formData.email,
+              first_name: formData.firstName,
+              last_name: formData.lastName,
+              education_level: formData.educationLevel,
+              school: formData.school,
+              profile_photo: avatarUrl
+            }
+          ]);
+
+        if (profileError) throw profileError;
+      }
+
+      toast({
+        title: "Account created successfully!",
+        description: "Please complete your profile to get started.",
+      });
+
       // Reset form
       setFormData({
         firstName: "",
@@ -113,8 +131,12 @@ const SignUp = () => {
       
       // Redirect to profile setup
       navigate("/profile-setup");
-    } catch (err) {
-      console.error("Navigation error:", err);
+    } catch (error: any) {
+      toast({
+        title: "Error signing up",
+        description: error.message,
+        variant: "destructive",
+      });
     } finally {
       setIsLoading(false);
     }

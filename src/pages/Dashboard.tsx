@@ -25,20 +25,21 @@ import { Link, useNavigate } from "react-router-dom";
 import ProfileDropdown from "@/components/ProfileDropdown";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/lib/supabaseClient";
+import { generateInitialsAvatar } from "@/utils/profileUtils";
 
 const Dashboard = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
 
   const [user, setUser] = useState({
-    firstName: "Alex",
-    lastName: "Johnson",
-    name: "Alex Johnson",
-    email: "alex.johnson@university.edu",
-    school: "State University",
-    level: "Undergraduate",
-    profileComplete: 85,
-    location: "Downtown Campus Area",
+    firstName: "",
+    lastName: "",
+    name: "",
+    email: "",
+    school: "",
+    level: "",
+    profileComplete: 0,
+    location: "",
     userType: "student" as "student" | "employer",
     profilePhoto: null as string | null,
     bio: "Computer Science student passionate about web development and machine learning.",
@@ -61,6 +62,7 @@ const Dashboard = () => {
   const [showProfileReminder, setShowProfileReminder] = useState(false);
   const [showUserSwitcher, setShowUserSwitcher] = useState(false);
   const [rememberedUsers, setRememberedUsers] = useState<string[]>([]);
+  const [isLoadingLocation, setIsLoadingLocation] = useState(false);
 
   const unreadNotifications = notifications.filter(n => !n.read).length;
 
@@ -169,6 +171,90 @@ const Dashboard = () => {
     if (!user.bio || !user.profilePhoto) setShowProfileReminder(true);
   }, [user.bio, user.profilePhoto]);
 
+  // Function to get user's location
+  const getUserLocation = async () => {
+    setIsLoadingLocation(true);
+    try {
+      const position = await new Promise<GeolocationPosition>((resolve, reject) => {
+        navigator.geolocation.getCurrentPosition(resolve, reject);
+      });
+
+      // Get location name using reverse geocoding
+      const response = await fetch(
+        `https://nominatim.openstreetmap.org/reverse?format=json&lat=${position.coords.latitude}&lon=${position.coords.longitude}`
+      );
+      const data = await response.json();
+      const locationName = data.address?.city || data.address?.town || data.address?.suburb || "Unknown location";
+      
+      // Update user location in database
+      const { error } = await supabase
+        .from('users')
+        .update({ 
+          location: locationName,
+          latitude: position.coords.latitude,
+          longitude: position.coords.longitude
+        })
+        .eq('email', user.email);
+
+      if (!error) {
+        setUser(prev => ({ ...prev, location: locationName }));
+        toast({
+          title: "Location Updated",
+          description: `Your location has been set to ${locationName}`,
+        });
+      }
+    } catch (error) {
+      console.error('Error getting location:', error);
+      toast({
+        title: "Location Error",
+        description: "Unable to get your location. Please enable location access.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsLoadingLocation(false);
+    }
+  };
+
+  // Load user data from Supabase
+  useEffect(() => {
+    const loadUserData = async () => {
+      const { data: { user: authUser } } = await supabase.auth.getUser();
+      if (authUser) {
+        // Get user data from users table
+        const { data: userData, error } = await supabase
+          .from('users')
+          .select('*')
+          .eq('email', authUser.email)
+          .single();
+
+        if (!error && userData) {
+          const firstName = userData.first_name || authUser.user_metadata?.given_name || '';
+          const lastName = userData.last_name || authUser.user_metadata?.family_name || '';
+          const name = `${firstName} ${lastName}`.trim();
+          
+          setUser(prev => ({
+            ...prev,
+            firstName,
+            lastName,
+            name,
+            email: authUser.email || '',
+            school: userData.school || '',
+            level: userData.education_level || '',
+            location: userData.location || 'Location not set',
+            profilePhoto: userData.profile_photo || generateInitialsAvatar(firstName, lastName),
+          }));
+
+          // If location is not set, request it
+          if (!userData.location) {
+            getUserLocation();
+          }
+        }
+      }
+    };
+
+    loadUserData();
+  }, []);
+
   // Empty arrays for now - will be populated with real data
   const recentJobs: any[] = [];
   const applications: any[] = [];
@@ -224,54 +310,58 @@ const Dashboard = () => {
           <Button size="sm" variant="ghost" onClick={() => setShowUserSwitcher(false)}>Close</Button>
         </div>
       )}
-      {/* Navigation */}
-      <nav className="px-6 py-4 bg-white/80 backdrop-blur-sm border-b border-gray-200">
-        <div className="max-w-7xl mx-auto flex items-center justify-between">
-          <Link to="/" className="flex items-center space-x-2 group">
-            <div className="w-8 h-8 bg-gradient-to-r from-blue-600 to-green-600 rounded-lg flex items-center justify-center group-hover:scale-110 group-hover:rotate-12 transition-all duration-300">
-              <Users className="w-5 h-5 text-white" />
-            </div>
-            <span className="text-xl font-bold bg-gradient-to-r from-blue-600 to-green-600 bg-clip-text text-transparent group-hover:scale-105 transition-transform duration-300">
-              LoCruit
-            </span>
-          </Link>
-          <div className="flex items-center space-x-4">
-            {/* User Switcher Button */}
-            {rememberedUsers.length > 1 && (
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button variant="ghost" size="icon" onClick={() => setShowUserSwitcher(true)}>
-                    <Users className="w-5 h-5 text-blue-600" />
+      {/* Header with location */}
+      <header className="bg-white border-b">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between items-center py-4">
+            <div className="flex items-center space-x-4">
+              <Link to="/" className="flex items-center space-x-2 group">
+                <div className="w-10 h-10 bg-gradient-to-r from-blue-600 to-green-600 rounded-lg flex items-center justify-center group-hover:scale-110 group-hover:rotate-12 transition-all duration-300">
+                  <Users className="w-6 h-6 text-white" />
+                </div>
+                <span className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-green-600 bg-clip-text text-transparent">
+                  LoCruit
+                </span>
+              </Link>
+              
+              {/* Location Display/Button */}
+              {user.location ? (
+                <div className="flex items-center space-x-2 text-gray-600">
+                  <MapPin className="w-4 h-4" />
+                  <span>{user.location}</span>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={getUserLocation}
+                    disabled={isLoadingLocation}
+                  >
+                    {isLoadingLocation ? "Updating..." : "Update"}
                   </Button>
-                </TooltipTrigger>
-                <TooltipContent>
-                  <p>Switch User</p>
-                </TooltipContent>
-              </Tooltip>
-            )}
-            <Button
-              className="bg-gradient-to-r from-green-600 to-blue-600 hover:from-green-700 hover:to-blue-700 flex items-center space-x-2 hover:scale-105 transition-all duration-300"
-              onClick={handlePostJob}
-            >
-              <Plus className="w-4 h-4" />
-              <span>Post Job</span>
-            </Button>
-            <Button variant="ghost" size="sm" className="relative hover:scale-110 transition-transform duration-200" onClick={handleNotificationClick}>
-              {unreadNotifications > 0 ? (
-                <>
-                  <BellDot className="w-5 h-5 text-blue-600" />
-                  <span className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white rounded-full text-xs flex items-center justify-center">
-                    {unreadNotifications}
-                  </span>
-                </>
+                </div>
               ) : (
-                <Bell className="w-5 h-5" />
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={getUserLocation}
+                  disabled={isLoadingLocation}
+                  className="flex items-center space-x-2"
+                >
+                  <MapPin className="w-4 h-4" />
+                  <span>{isLoadingLocation ? "Getting location..." : "Set your location"}</span>
+                </Button>
               )}
-            </Button>
-            <ProfileDropdown user={user} />
+            </div>
+
+            <div className="flex items-center space-x-4">
+              <ProfileDropdown
+                name={user.name}
+                email={user.email}
+                avatarUrl={user.profilePhoto || generateInitialsAvatar(user.firstName, user.lastName)}
+              />
+            </div>
           </div>
         </div>
-      </nav>
+      </header>
 
       <div className="max-w-7xl mx-auto px-6 py-8">
         {/* Welcome Section */}
