@@ -102,7 +102,9 @@ const Jobs = () => {
         const distanceValue = parseInt(distance, 10) || 10;
         
         // Use environment variable for API URL
-        const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3001';
+        const apiUrl = process.env.NODE_ENV === 'production' 
+          ? '/api' // Use Vercel API routes in production
+          : 'http://localhost:3001'; // Local development
         let url = `${apiUrl}/scrape?${locationQuery}&distance=${distanceValue}`;
         
         if (searchQuery) {

@@ -13,7 +13,9 @@ const ExternalJobs = () => {
   const fetchJobs = (lat, lon, zip, skills) => {
     setLoading(true);
     setError(null);
-    const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3001';
+    const apiUrl = process.env.NODE_ENV === 'production' 
+      ? '/api' // Use Vercel API routes in production
+      : 'http://localhost:3001'; // Local development
     let url = `${apiUrl}/scrape?`;
     if (lat && lon) {
       url += `lat=${lat}&lon=${lon}`;
