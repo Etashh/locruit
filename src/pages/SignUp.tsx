@@ -97,22 +97,27 @@ const SignUp = () => {
       title: "Account created successfully!",
       description: "Please complete your profile to get started.",
     });
-    setFormData({
-      firstName: "",
-      lastName: "",
-      email: "",
-      password: "",
-      confirmPassword: "",
-      educationLevel: "",
-      school: ""
-    });
-    setShowPassword(false);
-    setShowConfirmPassword(false);
-    setIsLoading(false);
-    // Redirect to profile setup (bio, certificate, profile picture, etc.)
-    navigate("/profile-setup");
-    return;
-    setIsLoading(false);
+    try {
+      // Reset form
+      setFormData({
+        firstName: "",
+        lastName: "",
+        email: "",
+        password: "",
+        confirmPassword: "",
+        educationLevel: "",
+        school: ""
+      });
+      setShowPassword(false);
+      setShowConfirmPassword(false);
+      
+      // Redirect to profile setup
+      navigate("/profile-setup");
+    } catch (err) {
+      console.error("Navigation error:", err);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleGoogleSignUp = () => {

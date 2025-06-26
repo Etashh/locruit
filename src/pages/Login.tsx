@@ -57,7 +57,10 @@ const Login = () => {
         title: "Welcome back!",
         description: "Successfully logged in to LoCruit.",
       });
-      navigate("/dashboard");
+      // Check for redirect parameter in URL
+      const params = new URLSearchParams(window.location.search);
+      const redirectTo = params.get('redirect');
+      navigate(redirectTo || "/dashboard");
     }
     setIsLoading(false);
   };
