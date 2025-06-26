@@ -23,6 +23,7 @@ import ResetPassword from "./pages/ResetPassword";
 import ExternalJobs from "./pages/ExternalJobs";
 import LocationHandler from "./pages/LocationHandler";
 import Schedule from "./pages/Schedule";
+import Watermark from "./components/Watermark";
 
 
 const queryClient = new QueryClient();
@@ -53,6 +54,7 @@ const App = () => (
             <Route path="/schedule" element={<AuthCheck><Schedule /></AuthCheck>} />
             <Route path="*" element={<NotFound />} />
           </Routes>
+          <Watermark />
         </BrowserRouter>
       </TooltipProvider>
     </LocationProvider>
