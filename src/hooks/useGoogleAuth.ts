@@ -12,7 +12,7 @@ export const useGoogleAuth = () => {
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: `${window.location.origin}/dashboard`,
+          redirectTo: 'https://locruit-xi6u.vercel.app/dashboard',
           queryParams: {
             access_type: 'offline',
             prompt: 'consent',
