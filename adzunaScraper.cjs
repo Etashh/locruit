@@ -261,6 +261,36 @@ app.get('/scrape', async (req, res) => {
   }
 });
 
+// Endpoint to fetch Adzuna job results
+app.get('/api/jobs', async (req, res) => {
+  const { skills, location, lat, lon, distance } = req.query;
+
+  try {
+    const response = await axios.get(
+      `https://api.adzuna.com/v1/api/jobs/${COUNTRY}/search/1`,
+      {
+        params: {
+          app_id: APP_ID,
+          app_key: APP_KEY,
+          results_per_page: 20,
+          what: skills,
+          where: location,
+          latitude: lat,
+          longitude: lon,
+          distance: distance,
+          max_days_old: 30,
+          sort_by: 'date',
+        },
+      }
+    );
+
+    res.json(response.data);
+  } catch (error) {
+    console.error('Error fetching Adzuna jobs:', error.message);
+    res.status(500).json({ error: 'Failed to fetch jobs from Adzuna API.' });
+  }
+});
+
 // Start the server
 app.listen(port, () => {
   console.log(`Adzuna API scraper server listening at http://localhost:${port}`);

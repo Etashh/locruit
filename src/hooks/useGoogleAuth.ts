@@ -12,7 +12,7 @@ export const useGoogleAuth = () => {
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: 'https://locruit-xi6u.vercel.app/dashboard',
+          redirectTo: `${window.location.origin}/profile-setup`,
           queryParams: {
             access_type: 'offline',
             prompt: 'consent',
@@ -24,12 +24,10 @@ export const useGoogleAuth = () => {
         throw error;
       }
 
-      // The redirect will happen automatically, but we can show a loading message
       toast({
-        title: "Redirecting to Google...",
-        description: "Please complete the authentication process.",
+        title: "Redirecting to Profile Setup...",
+        description: "Please complete your profile to proceed to the dashboard.",
       });
-
     } catch (error: any) {
       console.error('Google sign-in error:', error.message);
       toast({
