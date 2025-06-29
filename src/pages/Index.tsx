@@ -28,8 +28,11 @@ const Index = () => {
   };
 
   const handleBrowseJobs = () => {
-    console.log("Browse Jobs button clicked - navigating to location handler");
-    navigate('/set-location');
+    if (isLoggedIn) {
+      navigate('/jobs');
+    } else {
+      navigate('/login');
+    }
   };
 
   return (

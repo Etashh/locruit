@@ -1,11 +1,12 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { User, Settings, LogOut, Award, MapPin } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { generateInitials } from "@/utils/profileUtils";
+import { generateInitials, generateInitialsAvatar } from "@/utils/profileUtils";
 import { supabase } from "@/lib/supabaseClient";
+import { Moon, Sun } from "lucide-react";
 
 interface ProfileDropdownProps {
   name: string;
@@ -14,6 +15,8 @@ interface ProfileDropdownProps {
   school?: string;
   level?: string;
   location?: string;
+  firstName?: string;
+  lastName?: string;
 }
 
 const ProfileDropdown = ({
@@ -22,10 +25,28 @@ const ProfileDropdown = ({
   avatarUrl,
   school,
   level,
-  location
+  location,
+  firstName = '',
+  lastName = ''
 }: ProfileDropdownProps) => {
   const [isOpen, setIsOpen] = useState(false);
+  const [darkMode, setDarkMode] = useState(() => {
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem('theme') === 'dark';
+    }
+    return false;
+  });
   const navigate = useNavigate();
+
+  useEffect(() => {
+    if (darkMode) {
+      document.documentElement.classList.add('dark');
+      localStorage.setItem('theme', 'dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+      localStorage.setItem('theme', 'light');
+    }
+  }, [darkMode]);
 
   const handleLogout = async () => {
     const { error } = await supabase.auth.signOut();
@@ -46,8 +67,12 @@ const ProfileDropdown = ({
         onClick={toggleDropdown}
       >
         <Avatar className="h-8 w-8">
-          <AvatarImage src={avatarUrl} alt={name} />
-          <AvatarFallback>{generateInitials(name.split(" ")[0], name.split(" ")[1])}</AvatarFallback>
+          {avatarUrl ? (
+            <AvatarImage src={avatarUrl} alt={name} />
+          ) : (
+            <AvatarImage src={typeof window !== 'undefined' ? generateInitialsAvatar(firstName, lastName) : undefined} alt={name} />
+          )}
+          <AvatarFallback>{generateInitials(firstName, lastName)}</AvatarFallback>
         </Avatar>
       </Button>
 
@@ -57,8 +82,12 @@ const ProfileDropdown = ({
             <div className="flex flex-col space-y-4">
               <div className="flex items-start space-x-3">
                 <Avatar className="h-10 w-10">
-                  <AvatarImage src={avatarUrl} alt={name} />
-                  <AvatarFallback>{generateInitials(name.split(" ")[0], name.split(" ")[1])}</AvatarFallback>
+                  {avatarUrl ? (
+                    <AvatarImage src={avatarUrl} alt={name} />
+                  ) : (
+                    <AvatarImage src={typeof window !== 'undefined' ? generateInitialsAvatar(firstName, lastName) : undefined} alt={name} />
+                  )}
+                  <AvatarFallback>{generateInitials(firstName, lastName)}</AvatarFallback>
                 </Avatar>
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-medium text-gray-900 truncate">{name}</p>
@@ -102,6 +131,14 @@ const ProfileDropdown = ({
                 >
                   <LogOut className="w-4 h-4 mr-2" />
                   Sign Out
+                </Button>
+                <Button
+                  variant="outline"
+                  className="w-full justify-start text-sm mt-2"
+                  onClick={() => setDarkMode((prev) => !prev)}
+                >
+                  {darkMode ? <Sun className="w-4 h-4 mr-2 text-yellow-400" /> : <Moon className="w-4 h-4 mr-2 text-gray-700" />}
+                  {darkMode ? 'Light Mode' : 'Dark Mode'}
                 </Button>
               </div>
             </div>

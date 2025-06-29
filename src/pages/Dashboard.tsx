@@ -19,7 +19,9 @@ import {
   Building2,
   FileText,
   BellDot,
-  Calendar
+  Calendar,
+  Moon,
+  Sun
 } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import ProfileDropdown from "@/components/ProfileDropdown";
@@ -63,6 +65,12 @@ const Dashboard = () => {
   const [showUserSwitcher, setShowUserSwitcher] = useState(false);
   const [rememberedUsers, setRememberedUsers] = useState<string[]>([]);
   const [isLoadingLocation, setIsLoadingLocation] = useState(false);
+  const [darkMode, setDarkMode] = useState(() => {
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem('theme') === 'dark';
+    }
+    return false;
+  });
 
   const unreadNotifications = notifications.filter(n => !n.read).length;
 
@@ -286,6 +294,18 @@ const Dashboard = () => {
   // For all Browse Jobs buttons, use navigate('/set-location') instead of Link if needed:
   const handleBrowseJobs = () => navigate('/set-location');
 
+  useEffect(() => {
+    if (darkMode) {
+      document.documentElement.classList.add('dark');
+      localStorage.setItem('theme', 'dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+      localStorage.setItem('theme', 'light');
+    }
+  }, [darkMode]);
+
+  const toggleDarkMode = () => setDarkMode((prev) => !prev);
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-green-50">
       {/* Profile Completion Reminder */}
@@ -353,11 +373,25 @@ const Dashboard = () => {
             </div>
 
             <div className="flex items-center space-x-4">
-              <span className="text-lg font-semibold text-gray-800">Hello, {user.firstName}</span>
+              <span className="text-lg font-semibold text-gray-800 dark:text-gray-100">Hello, {user.firstName}</span>
+              <Button
+                variant="ghost"
+                size="icon"
+                aria-label="Toggle dark mode"
+                onClick={() => setDarkMode((prev) => !prev)}
+                className="rounded-full"
+              >
+                {darkMode ? <Sun className="w-5 h-5 text-yellow-400" /> : <Moon className="w-5 h-5 text-gray-700" />}
+              </Button>
               <ProfileDropdown
                 name={user.name}
                 email={user.email}
-                avatarUrl={user.profilePhoto || generateInitialsAvatar(user.firstName, user.lastName)}
+                avatarUrl={user.profilePhoto}
+                school={user.school}
+                level={user.level}
+                location={user.location}
+                firstName={user.firstName}
+                lastName={user.lastName}
               />
             </div>
           </div>

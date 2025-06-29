@@ -60,7 +60,32 @@ const Login = () => {
       // Check for redirect parameter in URL
       const params = new URLSearchParams(window.location.search);
       const redirectTo = params.get('redirect');
-      navigate(redirectTo || "/dashboard");
+
+      // Fetch user profile from localStorage or Supabase to check completeness
+      let userProfile = localStorage.getItem('userProfile');
+      let needsProfileSetup = false;
+      if (userProfile) {
+        const profile = JSON.parse(userProfile);
+        if (!profile.bio || !profile.photo) needsProfileSetup = true;
+      } else {
+        // Fallback: fetch from Supabase
+        const { data: { user: authUser } } = await supabase.auth.getUser();
+        if (authUser) {
+          const { data: userData } = await supabase
+            .from('users')
+            .select('*')
+            .eq('email', authUser.email)
+            .single();
+          if (!userData || !userData.bio || !userData.profile_photo) needsProfileSetup = true;
+        } else {
+          needsProfileSetup = true;
+        }
+      }
+      if (needsProfileSetup) {
+        navigate('/profile-setup');
+      } else {
+        navigate(redirectTo || "/dashboard");
+      }
     }
     setIsLoading(false);
   };

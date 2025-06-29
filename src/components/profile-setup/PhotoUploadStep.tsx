@@ -21,6 +21,8 @@ const PhotoUploadStep = ({ profilePhoto, setProfilePhoto, firstName = "", lastNa
     if (firstName && lastName && !profilePhoto) {
       const avatar = generateInitialsAvatar(firstName, lastName);
       setInitialsAvatar(avatar);
+    } else if (!profilePhoto) {
+      setInitialsAvatar(generateInitialsAvatar("User", "")); // Default initials if no name provided
     }
   }, [firstName, lastName, profilePhoto]);
 
