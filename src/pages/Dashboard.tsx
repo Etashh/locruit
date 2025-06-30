@@ -374,15 +374,7 @@ const Dashboard = () => {
 
             <div className="flex items-center space-x-4">
               <span className="text-lg font-semibold text-gray-800 dark:text-gray-100">Hello, {user.firstName}</span>
-              <Button
-                variant="ghost"
-                size="icon"
-                aria-label="Toggle dark mode"
-                onClick={() => setDarkMode((prev) => !prev)}
-                className="rounded-full"
-              >
-                {darkMode ? <Sun className="w-5 h-5 text-yellow-400" /> : <Moon className="w-5 h-5 text-gray-700" />}
-              </Button>
+              {/* Remove local dark mode button, now in ProfileDropdown */}
               <ProfileDropdown
                 name={user.name}
                 email={user.email}
@@ -723,6 +715,15 @@ const Dashboard = () => {
           </div>
         </div>
       </div>
+
+      {/* Add Back to Top button */}
+      <button
+        onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+        className="fixed bottom-6 right-6 z-50 bg-blue-600 text-white p-3 rounded-full shadow-lg hover:bg-green-600 transition-all duration-300"
+        aria-label="Back to Top"
+      >
+        ↑
+      </button>
     </div>
   );
 };

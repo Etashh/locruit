@@ -6,7 +6,7 @@ import { User, Settings, LogOut, Award, MapPin } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { generateInitials, generateInitialsAvatar } from "@/utils/profileUtils";
 import { supabase } from "@/lib/supabaseClient";
-import { Moon, Sun } from "lucide-react";
+import DarkModeToggle from "@/components/ui/DarkModeToggle";
 
 interface ProfileDropdownProps {
   name: string;
@@ -59,6 +59,20 @@ const ProfileDropdown = ({
     setIsOpen(!isOpen);
   };
 
+  // Helper to get initials from name or email
+  const getInitials = () => {
+    if (firstName || lastName) return generateInitials(firstName, lastName);
+    if (name) {
+      const [f, l] = name.split(" ");
+      return generateInitials(f, l);
+    }
+    if (email) {
+      const user = email.split("@")[0];
+      return user.slice(0, 2).toUpperCase();
+    }
+    return "U";
+  };
+
   return (
     <div className="relative">
       <Button
@@ -70,9 +84,9 @@ const ProfileDropdown = ({
           {avatarUrl ? (
             <AvatarImage src={avatarUrl} alt={name} />
           ) : (
-            <AvatarImage src={typeof window !== 'undefined' ? generateInitialsAvatar(firstName, lastName) : undefined} alt={name} />
+            <AvatarImage src={typeof window !== 'undefined' ? generateInitialsAvatar(firstName || name?.split(" ")[0] || email, lastName || name?.split(" ")[1] || "") : undefined} alt={name} />
           )}
-          <AvatarFallback>{generateInitials(firstName, lastName)}</AvatarFallback>
+          <AvatarFallback>{getInitials()}</AvatarFallback>
         </Avatar>
       </Button>
 
@@ -85,9 +99,9 @@ const ProfileDropdown = ({
                   {avatarUrl ? (
                     <AvatarImage src={avatarUrl} alt={name} />
                   ) : (
-                    <AvatarImage src={typeof window !== 'undefined' ? generateInitialsAvatar(firstName, lastName) : undefined} alt={name} />
+                    <AvatarImage src={typeof window !== 'undefined' ? generateInitialsAvatar(firstName || name?.split(" ")[0] || email, lastName || name?.split(" ")[1] || "") : undefined} alt={name} />
                   )}
-                  <AvatarFallback>{generateInitials(firstName, lastName)}</AvatarFallback>
+                  <AvatarFallback>{getInitials()}</AvatarFallback>
                 </Avatar>
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-medium text-gray-900 truncate">{name}</p>
@@ -132,14 +146,7 @@ const ProfileDropdown = ({
                   <LogOut className="w-4 h-4 mr-2" />
                   Sign Out
                 </Button>
-                <Button
-                  variant="outline"
-                  className="w-full justify-start text-sm mt-2"
-                  onClick={() => setDarkMode((prev) => !prev)}
-                >
-                  {darkMode ? <Sun className="w-4 h-4 mr-2 text-yellow-400" /> : <Moon className="w-4 h-4 mr-2 text-gray-700" />}
-                  {darkMode ? 'Light Mode' : 'Dark Mode'}
-                </Button>
+                <DarkModeToggle className="w-full mt-2" />
               </div>
             </div>
           </CardContent>
