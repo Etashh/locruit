@@ -1,0 +1,11 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"type": "shell",
+			"label": "Remove Etashh.github.io folder",
+			"command": "rm -rf Etashh.github.io",
+			"group": "build"
+		}
+	]
+}
