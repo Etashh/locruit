@@ -74,10 +74,26 @@ const SignUp = () => {
     setIsLoading(true);
     
     try {
+      // Add debug logging
+      console.log('Supabase URL:', import.meta.env.VITE_SUPABASE_URL);
+      console.log('Supabase Key present:', !!import.meta.env.VITE_SUPABASE_ANON_KEY);
+
       // Generate initial avatar
       const avatarUrl = generateInitialsAvatar(formData.firstName, formData.lastName);
 
-      // Sign up the user
+      // Sign up the user with debugging
+      console.log('Starting user signup...');
+      console.log('Attempting signup with:', {
+        email: formData.email,
+        passwordLength: formData.password.length,
+        userData: {
+          first_name: formData.firstName,
+          last_name: formData.lastName,
+          education_level: formData.educationLevel,
+          school: formData.school,
+        }
+      });
+
       const { error: signUpError, data: { user } } = await supabase.auth.signUp({
         email: formData.email,
         password: formData.password,
@@ -88,12 +104,17 @@ const SignUp = () => {
             education_level: formData.educationLevel,
             school: formData.school,
           },
+          emailRedirectTo: 'https://locruit-xi6u.vercel.app/auth/callback'
         },
       });
 
-      if (signUpError) throw signUpError;
+      if (signUpError) {
+        console.error('Signup error details:', signUpError);
+        throw signUpError;
+      }
 
       if (user) {
+        console.log('User created successfully:', user.id);
         // Create user profile in users table with avatar
         const { error: profileError } = await supabase
           .from('users')
